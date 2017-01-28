@@ -54,6 +54,13 @@ bool isReserved(string token){
 
 }	
 
+void initializeReservedStrings( map<string,bool> *reservedStrings){
+	reservedStrings->insert(pair<string,int>("FOR", true));
+	reservedStrings->insert(pair<string,int>("PRINT", true));
+	reservedStrings->insert(pair<string,int>("ENDFOR", true));
+	reservedStrings->insert(pair<string,int>("PROC", true));
+	reservedStrings->insert(pair<string,int>("CALL",true));
+}
 
 vector<string> tokenize(string line){
 	vector<string> lineList = split(line, ' '); 	
@@ -66,13 +73,8 @@ int main() {
 	string line;
 	ifstream programFile ("TesterPrograms/prog1.zpm");
 	map<string,anyType> values;
-	map<string, bool> reservedStrings = {
-	{"FOR", true},
-	{"PRINT", true},
-	{"ENDFOR", true},
-	{"PROC", true},
-	{"CALL",true}
-	};
+	map<string, bool> reservedStrings;
+	initializeReservedStrings(&reservedStrings);
 
 	if (programFile.is_open()){
 		while(! programFile.eof()){
@@ -84,7 +86,6 @@ int main() {
 				return 1;
 			}	
 			for(int j=0; j<tokens.size();j++){					
-				if(	
 								
 
 
