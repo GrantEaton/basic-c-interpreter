@@ -11,9 +11,21 @@ int lineCount;
 struct anyType{
 	string type;
 
-	bool boolVal;
+	bool boolVal ;
 	string strVal;
 	int intVal;
+
+	void printVal(){
+		if(type == "bool"){
+			cout <<boolVal;
+		}
+		else if(type == "string"){
+			cout << strVal;
+		}
+		else if(type == "int"){
+			cout << intVal;
+		}
+	}
 };
 void printVector(vector<string> list){
 	for( int j = 0; j <list.size(); j++){
@@ -45,21 +57,19 @@ vector<string> split(const string &s, char delim) {
 		if(s[j] == ' ' && s[j+1] == ' '){
 			elems.erase(elems.begin()+j);
 			handleError("two spaces", "Fixed error, attempting to continue.");
+			j--;
 		}
 	}
 	return elems;
 }
 
-bool isReserved(string token){
-
-}	
 
 void initializeReservedStrings( map<string,bool> *reservedStrings){
-	reservedStrings->insert(pair<string,int>("FOR", true));
-	reservedStrings->insert(pair<string,int>("PRINT", true));
-	reservedStrings->insert(pair<string,int>("ENDFOR", true));
-	reservedStrings->insert(pair<string,int>("PROC", true));
-	reservedStrings->insert(pair<string,int>("CALL",true));
+	reservedStrings->insert(pair<string,bool>("FOR", true));
+	reservedStrings->insert(pair<string,bool>("PRINT", true));
+	reservedStrings->insert(pair<string,bool>("ENDFOR", true));
+	reservedStrings->insert(pair<string,bool>("PROC", true));
+	reservedStrings->insert(pair<string,bool>("CALL",true));
 }
 
 vector<string> tokenize(string line){
@@ -68,13 +78,15 @@ vector<string> tokenize(string line){
 }
 int main() {
 	string a = "hello my name is  x = i ;";
-	vector<string> list = split(a, ' ');
-	printVector(list);
 	string line;
 	ifstream programFile ("TesterPrograms/prog1.zpm");
 	map<string,anyType> values;
 	map<string, bool> reservedStrings;
 	initializeReservedStrings(&reservedStrings);
+	string b = "hi";
+	int c;
+	istringstream(b) >> c;
+	cout << c;
 
 	if (programFile.is_open()){
 		while(! programFile.eof()){
@@ -86,8 +98,16 @@ int main() {
 				return 1;
 			}	
 			for(int j=0; j<tokens.size();j++){					
-								
+				if(reservedStrings.count(tokens[j]) > 0){
+					// do reserved strings stuff
+				}
+				else if(values.count(tokens[j]) > 0){
+					if(tokens[j+1] == "="){
+						anyType newVal;
 
+						values.insert(pair<string,anyType>(tokens[j],newVal));	
+					}
+				}
 
 
 
