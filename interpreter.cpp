@@ -100,14 +100,11 @@ int main() {
 	map<string,anyType> vars;
 	map<string, bool> reservedStrings;
 	initializeReservedStrings(&reservedStrings);
-	string b = "hi";
-	int c;
-	istringstream(b) >> c;
-	cout << c;
 
 	if (programFile.is_open()){
 		while(! programFile.eof()){
 			lineCount++;
+			cout << lineCount << "\n";
 			getline(programFile, line);
 			//cout << line << endl;
 			vector<string> tokens = split(line, ' ');
@@ -117,25 +114,47 @@ int main() {
 			for(int j=0; j<tokens.size();j++){					
 				if(isReservedString(tokens[j], &reservedStrings)){
 					// do reserved strings stuff
+					if(tokens.at(j) == "PRINT"){
+						cout << "printing \n";
+						cout << tokens[j+1];
+					}
 				}
 				else if(vars.count(tokens[j]) > 0){
-					if(tokens[j+1] == "="){
+					if(tokens.at(j+1) == "="){
 						anyType newVal;
 						locale loc("en-US");
 						//if first value of next token is a previous value
 						//ex A = B
-						if(isVariable(tokens[j+2],&vars)){
+						if(isVariable(tokens.at(j+2),&vars)){
 							//assign B's val to A
-							anyType val = vars[tokens[j+2]];
-							vars.insert(pair<string,anyType>(tokens[j+2], val));
+							anyType val = vars[tokens.at(j+2)];
+							vars.insert(pair<string,anyType>(tokens.at(j+2), val));
 						}
-						else if(isalpha(tokens[j+2].at(0),loc)){ 
+						else if(isalpha(tokens.at(j+2).at(0),loc)){ 
 
 							
 						}
-
-						vars.insert(pair<string,anyType>(tokens[j],newVal));	
+						
+						vars.insert(pair<string,anyType>(tokens.at(j),newVal));	
 					}
+				}
+				else{
+					printVector(tokens);
+					if(tokens.at(j+2).at(0) == '"'){
+						anyType str;
+						str.type = "string";
+						str.strVal = tokens.at(j+2);
+						vars.insert(pair<string,anyType>(tokens.at(j),str ));
+					}
+					else {
+						anyType num;
+						num.type = "int";
+						stringstream convert(tokens.at(j+2));
+						convert >> num.intVal;
+						vars.insert(pair<string,anyType>(tokens.at(j),num ));
+					
+					}
+
 				}
 
 
@@ -149,6 +168,5 @@ int main() {
 
 	return 0;
 }
-
 
 
