@@ -31,8 +31,9 @@ void printVector(vector<string> list){
 	for( int j = 0; j <list.size(); j++){
 	    cout << list[j] << ", ";
 	}
-		
+	cout << "\n";		
 }
+
 void handleError(string err, string extraInfo){
 	cout << "ERROR: '" << err << "' at line " << lineCount << ". " << extraInfo << "\n";
 	if(err != "two spaces"){
@@ -54,7 +55,7 @@ vector<string> split(const string &s, char delim) {
     vector<string> elems;
 	splitHelper(s, delim, back_inserter(elems));
 	for( int j = 0; j <s.size()-1; j++){
-		if(s[j] == ' ' && s[j+1] == ' '){
+		if(s.at(j) == ' ' && s.at(j+1) == ' '){
 			elems.erase(elems.begin()+j);
 			handleError("two spaces", "Fixed error, attempting to continue.");
 			j--;
@@ -102,56 +103,58 @@ int main() {
 	initializeReservedStrings(&reservedStrings);
 
 	if (programFile.is_open()){
-		while(! programFile.eof()){
+		while(getline(programFile, line)){
 			lineCount++;
-			cout << lineCount << "\n";
-			getline(programFile, line);
-			//cout << line << endl;
-			vector<string> tokens = split(line, ' ');
+			//cout << "line count" << lineCount << "\n";
+						//cout << lineCount << ": ";
+			//cout << "line: " <<  line << endl;
+			vector<string> tokens = tokenize(line); 
+			cout << "tokens: ";
+			printVector(tokens);
 			if(crashBool){
 				return 1;
 			}	
-			for(int j=0; j<tokens.size();j++){					
-				if(isReservedString(tokens[j], &reservedStrings)){
+		//	for(int j=0; j<tokens.size();j++){					
+				if(isReservedString(tokens[0], &reservedStrings)){
 					// do reserved strings stuff
-					if(tokens.at(j) == "PRINT"){
-						cout << "printing \n";
-						cout << tokens[j+1];
+					if(tokens.at(0) == "PRINT"){
+						cout << "printing : ";
+						anyType var = vars[tokens.at(1)];
+						var.printVal();
 					}
 				}
-				else if(vars.count(tokens[j]) > 0){
-					if(tokens.at(j+1) == "="){
+				else if(vars.count(tokens[0]) > 0){
+					if(tokens.at(1) == "="){
 						anyType newVal;
 						locale loc("en-US");
 						//if first value of next token is a previous value
 						//ex A = B
-						if(isVariable(tokens.at(j+2),&vars)){
+						if(isVariable(tokens.at(2),&vars)){
 							//assign B's val to A
-							anyType val = vars[tokens.at(j+2)];
-							vars.insert(pair<string,anyType>(tokens.at(j+2), val));
+							anyType val = vars[tokens.at(2)];
+							vars.insert(pair<string,anyType>(tokens.at(2), val));
 						}
-						else if(isalpha(tokens.at(j+2).at(0),loc)){ 
+						else if(isalpha(tokens.at(2).at(0),loc)){ 
 
 							
 						}
 						
-						vars.insert(pair<string,anyType>(tokens.at(j),newVal));	
+						vars.insert(pair<string,anyType>(tokens.at(0),newVal));	
 					}
 				}
 				else{
-					printVector(tokens);
-					if(tokens.at(j+2).at(0) == '"'){
+					if(tokens.at(2).at(0) == '"'){
 						anyType str;
 						str.type = "string";
-						str.strVal = tokens.at(j+2);
-						vars.insert(pair<string,anyType>(tokens.at(j),str ));
-					}
-					else {
+						str.strVal = tokens.at(2);
+						vars.insert(pair<string,anyType>(tokens.at(0),str ));
+					}else {
 						anyType num;
 						num.type = "int";
-						stringstream convert(tokens.at(j+2));
+						stringstream convert(tokens.at(2));
 						convert >> num.intVal;
-						vars.insert(pair<string,anyType>(tokens.at(j),num ));
+						cout << "adding value: " << num.intVal;
+						vars.insert(pair<string,anyType>(tokens.at(0),num ));
 					
 					}
 
@@ -159,7 +162,7 @@ int main() {
 
 
 
-			}
+			//}
 		}
 	programFile.close();
 
