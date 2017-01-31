@@ -141,13 +141,28 @@ int main() {
 						
 						vars.insert(pair<string,anyType>(tokens.at(0),newVal));	
 					}
+					else if (tokens.at(1) == "+="){
+						anyType var = vars[tokens.at(0)];
+						if(var.type == "string"){
+							string newStr = var.strVal + tokens.at(2); 
+							var.strVal = newStr;
+							cout << "newstring: " << newStr;
+							vars[tokens.at(0)] = var;	
+						}
+						else{
+							
+						}
+					}
 				}
+				//add variables if not in vars
 				else{
+					//add int values
 					if(tokens.at(2).at(0) == '"'){
 						anyType str;
 						str.type = "string";
-						str.strVal = tokens.at(2);
+						str.strVal = tokens.at(2).substr(1,tokens.at(2).length()-2);
 						vars.insert(pair<string,anyType>(tokens.at(0),str ));
+					//add string values
 					}else {
 						anyType num;
 						num.type = "int";
