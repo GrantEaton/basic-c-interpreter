@@ -83,6 +83,16 @@ vector<string> split(string &s, char delim) {
 	splitHelper(s, delim, back_inserter(elems));
 	//fix string to have spaces again
 	for(int i = 0; i< elems.size(); i++){
+		//chop off spaces at start and finish
+		if(elems.at(i)[0] == ' '){
+			elems.at(i) = elems.at(i).substr(1,elems.at(i).length());
+			cout << "CHOPPED OFF START: " << elems.at(i) << "\n";
+		}
+		if(elems.at(i)[elems.at(i).length()-1] == ' '){
+			elems.at(i) = elems.at(i).substr(0,elems.at(i).length()-2);
+			cout << "CHOPPED OFF END: " << elems.at(i)  << "\n";
+		}
+
 		if(elems.at(i)[0] != '"'){
 			continue;
 		}
@@ -92,6 +102,7 @@ vector<string> split(string &s, char delim) {
 			}
 		}
 	}
+	
 
 	return elems;
 }
@@ -126,7 +137,26 @@ bool isReservedString(string reservedString, map<string,bool> *reservedStrings){
 
 }
 void executeStatement(vector<string> tokens){
-	 if(vars.count(tokens[0]) > 0){
+	if(isReservedString(tokens[0], &reservedStrings)){
+				// do reserved strings stuff
+				if(tokens.at(0) == "PRINT"){
+					cout << "printing : ";
+					anyType var = vars[tokens.at(1)];
+					var.printVal();
+					cout << "\n";
+				}
+				else if(tokens.at(0) == "FOR"){
+					int numRepeat;
+					stringstream convert(tokens.at(1));
+					convert >> numRepeat;
+					
+					for(int j=0; j<numRepeat; j++){
+						
+					}
+				}
+	}
+
+	 else if(vars.count(tokens[0]) > 0){
 					if(tokens.at(1) == "="){
 						anyType newVal;
 						//if first value of next token is a previous value
@@ -247,11 +277,33 @@ void executeStatement(vector<string> tokens){
 
 				}
 }
+int nthSubstr(int n, const string& s,
+			 const string& p) {
+			string::size_type i = s.find(p);     // Find the first occurrence
+
+			int j;
+	  	   for (j = 1; j < n && i != string::npos; ++j)
+		        i = s.find(p, i+1); // Find the next occurrence
+
+			    if (j == n)
+				     return(i);
+			    else
+					return(-1);
+}
+											 
+vector<string> handleFOR(string line, char delim){
+	int secondSpace = nthSubstr(2,line," ");
+	cout << "SECOND SPACE INDEX: " << secondSpace << "\n";
+	line = line.substr(secondSpace, line.length()-7);
+	cout << "LINE AFTER: " << line  << "\n";
+	vector<string> statements = split(line, ';');
+	return statements;
+}
 
 int main() {
 	string a = "hello my name is  x = i ;";
 	string line;
-	ifstream programFile ("TesterPrograms/prog2.zpm");
+	ifstream programFile ("TesterPrograms/prog3.zpm");
 	initializeReservedStrings(&reservedStrings);
 
 	if (programFile.is_open()){
@@ -260,37 +312,40 @@ int main() {
 			//cout << "line count" << lineCount << "\n";
 						//cout << lineCount << ": ";
 			//cout << "line: " <<  line << endl;
-			vector<string> tokens = tokenize(line); 
+			
 
+			vector<string> tokens = tokenize(line); 
+			if(tokens.at(0) == "FOR"){
+				int numRepeat;
+				stringstream convert(tokens.at(1));
+				convert >> numRepeat;
+					
+				for(int j=0; j<numRepeat; j++){
+					vector<string> statements = handleFOR(line, ';');
+					for(int i = 0; i< statements.size(); i++){
+						cout << "statement:" <<statements.at(i);
+						vector<string> tokens = tokenize(statements.at(i));
+						executeStatement(tokens);
+					}
+				}
+			}
 			cout << "tokens: ";
 			printVector(tokens);
 			if(crashBool){
 				return 1;
 			}	
-			if(isReservedString(tokens[0], &reservedStrings)){
-				// do reserved strings stuff
-				if(tokens.at(0) == "PRINT"){
-					cout << "printing : ";
-					anyType var = vars[tokens.at(1)];
-					var.printVal();
-					cout << "\n";
-				}
-				else if(tokens.at(0) == "FOR"){
-					
-				}
-			}
 			else{
 				executeStatement(tokens);
 			}
+		}
 
 
 			//}
 		}
-	programFile.close();
 
-	}	
 	else cout << "Unable to open file. Check its the right file name.";
 
+	programFile.close();
 	return 0;
 }
 
