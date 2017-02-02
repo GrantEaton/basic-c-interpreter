@@ -5,8 +5,6 @@
 #include <sstream>
 #include <vector>
 using namespace std;
-bool crashBool = false;
-int lineCount;
 	
 struct anyType{
 	string type;
@@ -27,6 +25,13 @@ struct anyType{
 		}
 	}
 };
+
+bool crashBool = false;
+int lineCount;
+map<string,anyType> vars;
+map<string, bool> reservedStrings;
+
+
 void printVector(vector<string> list){
 	for( int j = 0; j <list.size(); j++){
 	    cout << list[j] << ", ";
@@ -120,38 +125,8 @@ bool isReservedString(string reservedString, map<string,bool> *reservedStrings){
 	return false;
 
 }
-
-int main() {
-	string a = "hello my name is  x = i ;";
-	string line;
-	ifstream programFile ("TesterPrograms/prog1.zpm");
-	map<string,anyType> vars;
-	map<string, bool> reservedStrings;
-	initializeReservedStrings(&reservedStrings);
-
-	if (programFile.is_open()){
-		while(getline(programFile, line)){
-			lineCount++;
-			//cout << "line count" << lineCount << "\n";
-						//cout << lineCount << ": ";
-			//cout << "line: " <<  line << endl;
-			vector<string> tokens = tokenize(line); 
-			cout << "tokens: ";
-			printVector(tokens);
-			if(crashBool){
-				return 1;
-			}	
-		//	for(int j=0; j<tokens.size();j++){					
-				if(isReservedString(tokens[0], &reservedStrings)){
-					// do reserved strings stuff
-					if(tokens.at(0) == "PRINT"){
-						cout << "printing : ";
-						anyType var = vars[tokens.at(1)];
-						var.printVal();
-						cout << "\n";
-					}
-				}
-				else if(vars.count(tokens[0]) > 0){
+void executeStatement(vector<string> tokens){
+	 if(vars.count(tokens[0]) > 0){
 					if(tokens.at(1) == "="){
 						anyType newVal;
 						//if first value of next token is a previous value
@@ -167,7 +142,7 @@ int main() {
 								anyType str;
 								str.type = "string";
 								str.strVal = tokens.at(2).substr(1,tokens.at(2).length()-2);
-								vars.insert(pair<string,anyType>(tokens.at(0),str ));
+								vars[tokens.at(0)] = str;
 
 							//add string values
 							}else {
@@ -176,7 +151,7 @@ int main() {
 								stringstream convert(tokens.at(2));
 								convert >> num.intVal;
 								cout << "adding value: " << num.intVal;
-								vars.insert(pair<string,anyType>(tokens.at(0),num ));
+								vars[tokens.at(0)] = num;
 								cout << "\n";
 					
 							}
@@ -186,8 +161,7 @@ int main() {
 					vars.insert(pair<string,anyType>(tokens.at(0),newVal));	
 					}
 						
-				}
-				else if (tokens.at(1) == "+="){
+					else if (tokens.at(1) == "+="){
 						anyType var = vars[tokens.at(0)];
 						if(var.type == "string"){
 							string newStr;
@@ -213,11 +187,11 @@ int main() {
 								var.intVal = var.intVal + vars[tokens.at(2)].intVal;
 								
 							}
-							cout << "after *=: " << var.intVal << "\n";
+							cout << "after +=: " << var.intVal << "\n";
 							vars[tokens.at(0)] = var;	
 						}
 					}
-				else if (tokens.at(1) == "*="){
+					else if (tokens.at(1) == "*="){
 						anyType var = vars[tokens.at(0)];
 					
 							int intVal;
@@ -233,8 +207,8 @@ int main() {
 							}
 							cout << "after *=: " << var.intVal << "\n";
 							vars[tokens.at(0)] = var;	
-				}
-				else if (tokens.at(1) == "-="){
+					}
+					else if (tokens.at(1) == "-="){
 						anyType var = vars[tokens.at(0)];
 					
 							int intVal;
@@ -250,8 +224,8 @@ int main() {
 							}
 							cout << "after -=: " << var.intVal << "\n";
 							vars[tokens.at(0)] = var;	
+					}
 				}
-
 				//add variables if not in vars
 				else{
 					//add int values
@@ -272,7 +246,42 @@ int main() {
 					}
 
 				}
+}
 
+int main() {
+	string a = "hello my name is  x = i ;";
+	string line;
+	ifstream programFile ("TesterPrograms/prog2.zpm");
+	initializeReservedStrings(&reservedStrings);
+
+	if (programFile.is_open()){
+		while(getline(programFile, line)){
+			lineCount++;
+			//cout << "line count" << lineCount << "\n";
+						//cout << lineCount << ": ";
+			//cout << "line: " <<  line << endl;
+			vector<string> tokens = tokenize(line); 
+
+			cout << "tokens: ";
+			printVector(tokens);
+			if(crashBool){
+				return 1;
+			}	
+			if(isReservedString(tokens[0], &reservedStrings)){
+				// do reserved strings stuff
+				if(tokens.at(0) == "PRINT"){
+					cout << "printing : ";
+					anyType var = vars[tokens.at(1)];
+					var.printVal();
+					cout << "\n";
+				}
+				else if(tokens.at(0) == "FOR"){
+					
+				}
+			}
+			else{
+				executeStatement(tokens);
+			}
 
 
 			//}
