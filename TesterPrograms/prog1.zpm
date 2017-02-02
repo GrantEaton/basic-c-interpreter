@@ -1,5 +1,9 @@
 a = 3 ;
-b = "hello" ;
-b += "world" ;
-PRINT a ;
+b = "hello man, here is the word:" ;
+d = "world" ;
+b += d ; 
+c = 8 ;
+e = 9 ;
+c += e ; 
+PRINT c ;
 PRINT b ;

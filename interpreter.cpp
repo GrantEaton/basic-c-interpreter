@@ -43,24 +43,51 @@ void handleError(string err, string extraInfo){
 
 template<typename Out>
 void splitHelper(const string &s, char delim, Out result) {
+	
     stringstream ss;
 	ss.str(s);
 	string item;
+
 	while (getline(ss, item, delim)) {
 		*(result++) = item;
-	}
+	} 
 }
 
-vector<string> split(const string &s, char delim) {
+vector<string> split(string &s, char delim) {
     vector<string> elems;
-	splitHelper(s, delim, back_inserter(elems));
+	//check for two spaces in a row
 	for( int j = 0; j <s.size()-1; j++){
 		if(s.at(j) == ' ' && s.at(j+1) == ' '){
 			elems.erase(elems.begin()+j);
 			handleError("two spaces", "Fixed error, attempting to continue.");
 			j--;
 		}
+		
 	}
+	//if there are spaces in a string
+	bool isString = false;
+	for(int j = 0; j < s.length(); j++){
+			
+		if(s.at(j) == '"'){
+			isString = !isString;
+		}
+		if(isString && s.at(j) == ' '){
+			s[j] = '~';
+		}
+	}
+	splitHelper(s, delim, back_inserter(elems));
+	//fix string to have spaces again
+	for(int i = 0; i< elems.size(); i++){
+		if(elems.at(i)[0] != '"'){
+			continue;
+		}
+		for(int k = 0; k < elems.at(i).size(); k++){
+			if(elems.at(i).at(k) == '~'){
+				elems.at(i)[k] = ' ';
+			}
+		}
+	}
+
 	return elems;
 }
 
@@ -121,12 +148,12 @@ int main() {
 						cout << "printing : ";
 						anyType var = vars[tokens.at(1)];
 						var.printVal();
+						cout << "\n";
 					}
 				}
 				else if(vars.count(tokens[0]) > 0){
 					if(tokens.at(1) == "="){
 						anyType newVal;
-						locale loc("en-US");
 						//if first value of next token is a previous value
 						//ex A = B
 						if(isVariable(tokens.at(2),&vars)){
@@ -134,26 +161,97 @@ int main() {
 							anyType val = vars[tokens.at(2)];
 							vars.insert(pair<string,anyType>(tokens.at(2), val));
 						}
-						else if(isalpha(tokens.at(2).at(0),loc)){ 
+						//assigning var to new string/int
+						else{
+							if(tokens.at(2).at(0) == '"'){
+								anyType str;
+								str.type = "string";
+								str.strVal = tokens.at(2).substr(1,tokens.at(2).length()-2);
+								vars.insert(pair<string,anyType>(tokens.at(0),str ));
 
-							
-						}
+							//add string values
+							}else {
+								anyType num;
+								num.type = "int";
+								stringstream convert(tokens.at(2));
+								convert >> num.intVal;
+								cout << "adding value: " << num.intVal;
+								vars.insert(pair<string,anyType>(tokens.at(0),num ));
+								cout << "\n";
+					
+							}
 						
-						vars.insert(pair<string,anyType>(tokens.at(0),newVal));	
+						}
+							
+					vars.insert(pair<string,anyType>(tokens.at(0),newVal));	
 					}
-					else if (tokens.at(1) == "+="){
+						
+				}
+				else if (tokens.at(1) == "+="){
 						anyType var = vars[tokens.at(0)];
 						if(var.type == "string"){
-							string newStr = var.strVal + tokens.at(2); 
+							string newStr;
+							//check if value is string or variable
+							if(tokens.at(2)[0] == '"'){
+								newStr = var.strVal + tokens.at(2).substr(1,tokens.at(2).length()-2);
+							}
+							else{//its a variable
+								newStr = var.strVal + vars[tokens.at(2)].strVal;
+							}
 							var.strVal = newStr;
-							cout << "newstring: " << newStr;
 							vars[tokens.at(0)] = var;	
 						}
-						else{
+						else{//it must be an int
+							int intVal;
+							if(isdigit(tokens.at(2)[0])){
+								stringstream convert(tokens.at(2));
+								convert >> intVal;
+								var.intVal = var.intVal + intVal;	
+					
+							}else{//its a variable
 							
+								var.intVal = var.intVal + vars[tokens.at(2)].intVal;
+								
+							}
+							cout << "after *=: " << var.intVal << "\n";
+							vars[tokens.at(0)] = var;	
 						}
 					}
+				else if (tokens.at(1) == "*="){
+						anyType var = vars[tokens.at(0)];
+					
+							int intVal;
+							if(isdigit(tokens.at(2)[0])){
+								stringstream convert(tokens.at(2));
+								convert >> intVal;
+								var.intVal = var.intVal * intVal;	
+					
+							}else{//its a variable
+							
+								var.intVal = var.intVal * vars[tokens.at(2)].intVal;
+								
+							}
+							cout << "after *=: " << var.intVal << "\n";
+							vars[tokens.at(0)] = var;	
 				}
+				else if (tokens.at(1) == "-="){
+						anyType var = vars[tokens.at(0)];
+					
+							int intVal;
+							if(isdigit(tokens.at(2)[0])){
+								stringstream convert(tokens.at(2));
+								convert >> intVal;
+								var.intVal = var.intVal - intVal;	
+					
+							}else{//its a variable
+							
+								var.intVal = var.intVal - vars[tokens.at(2)].intVal;
+								
+							}
+							cout << "after -=: " << var.intVal << "\n";
+							vars[tokens.at(0)] = var;	
+				}
+
 				//add variables if not in vars
 				else{
 					//add int values
@@ -168,7 +266,7 @@ int main() {
 						num.type = "int";
 						stringstream convert(tokens.at(2));
 						convert >> num.intVal;
-						cout << "adding value: " << num.intVal;
+						cout << "adding value: " << num.intVal << "\n";
 						vars.insert(pair<string,anyType>(tokens.at(0),num ));
 					
 					}
