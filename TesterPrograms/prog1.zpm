@@ -1,11 +1,10 @@
-a = 0 ;
-FOR 5 FOR 5 a += 1 ; ENDFOR ENDFOR
+a = 3 ;
+a *= 30 ;
+b = 0 ;
+b += a ;
+b += b ;
+a = a ;
+a = 4 ;
+b *= 2 ;
 PRINT a ;
-b = "hello man, here is the word:" ;
-d = "world" ;
-b += d ; 
-c = 8 ;
-e = 9 ;
-c += e ; 
-PRINT c ;
 PRINT b ;

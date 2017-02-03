@@ -352,13 +352,12 @@ void executeStatement(string statement){
 }
 										 
 int main(int argc, char* argv[]) {
-	string a = "hello my name is  x = i ;";
+	clock_t begin = clock();
 	string line;
 	//cout << *argv[1];
 	string arg = argv[1];
 	string file = ("TesterPrograms/" + arg);
-	cout << file;
-	ifstream programFile(""+ file);
+	ifstream programFile(file.c_str());
 	initializeReservedStrings(&reservedStrings);
 
 	if (programFile.is_open()){
@@ -382,7 +381,10 @@ int main(int argc, char* argv[]) {
 		}
 
 	else cout << "Unable to open file. Check its the right file name.";
-
+	
+	clock_t end = clock();
+	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+	cout << "time: " << elapsed_secs;
 	programFile.close();
 	return 0;
 }
