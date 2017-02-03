@@ -1,4 +1,6 @@
-a = 3 ;
+a = 0 ;
+FOR 5 FOR 5 a += 1 ; ENDFOR ENDFOR
+PRINT a ;
 b = "hello man, here is the word:" ;
 d = "world" ;
 b += d ; 

@@ -15,13 +15,13 @@ struct anyType{
 
 	void printVal(){
 		if(type == "bool"){
-			cout <<boolVal;
+			cout <<boolVal << "\n";
 		}
 		else if(type == "string"){
-			cout << strVal;
+			cout << strVal << "\n";
 		}
 		else if(type == "int"){
-			cout << intVal;
+			cout << intVal << "\n";
 		}
 	}
 };
@@ -31,7 +31,20 @@ int lineCount;
 map<string,anyType> vars;
 map<string, bool> reservedStrings;
 
+int nthSubstr(int n, const string& s,
+			 const string& p) {
+			string::size_type i = s.find(p);     // Find the first occurrence
 
+			int j;
+	  	   for (j = 1; j < n && i != string::npos; ++j)
+		        i = s.find(p, i+1); // Find the next occurrence
+
+			    if (j == n)
+				     return(i);
+			    else
+					return(-1);
+}
+	
 void printVector(vector<string> list){
 	for( int j = 0; j <list.size(); j++){
 	    cout << list[j] << ", ";
@@ -58,7 +71,9 @@ void splitHelper(const string &s, char delim, Out result) {
 	} 
 }
 
-vector<string> split(string &s, char delim) {
+
+vector<string> split(string &s, char delim, bool parseFor) {
+	//cout << "FOUND:"<<nthSubstr(1,s,"FOR");
     vector<string> elems;
 	//check for two spaces in a row
 	for( int j = 0; j <s.size()-1; j++){
@@ -71,13 +86,32 @@ vector<string> split(string &s, char delim) {
 	}
 	//if there are spaces in a string
 	bool isString = false;
+	string loopString = "";
 	for(int j = 0; j < s.length(); j++){
-			
+		
 		if(s.at(j) == '"'){
 			isString = !isString;
 		}
 		if(isString && s.at(j) == ' '){
 			s[j] = '~';
+		}
+	}
+	if(parseFor){
+		int forIndex = (nthSubstr(1,s, "FOR")); 
+		if(forIndex != -1){
+			int endForIndex;
+			for(int j = forIndex; j < s.length()-6; j++){
+				endForIndex = nthSubstr(1,s,"ENDFOR") + 6;
+				if(s.substr(j,j+6) == "ENDFOR"){
+					endForIndex = j+6;	
+					//cout << "ENDFOR INDEX:" << endForIndex << "\n";
+				}
+			}
+
+			loopString = s.substr(forIndex, endForIndex);
+			//cout <<"FOUND LOOPSTRING:"<< loopString << "\n";
+			s = s.substr(0,forIndex) +"% ;"+ s.substr(endForIndex, s.length());
+			//cout << "AFTER ADDING %:" << s << "\n";
 		}
 	}
 	splitHelper(s, delim, back_inserter(elems));
@@ -86,26 +120,39 @@ vector<string> split(string &s, char delim) {
 		//chop off spaces at start and finish
 		if(elems.at(i)[0] == ' '){
 			elems.at(i) = elems.at(i).substr(1,elems.at(i).length());
-			cout << "CHOPPED OFF START: " << elems.at(i) << "\n";
+			//cout << "CHOPPED OFF START: " << elems.at(i) << "\n";
 		}
 		if(elems.at(i)[elems.at(i).length()-1] == ' '){
-			elems.at(i) = elems.at(i).substr(0,elems.at(i).length()-2);
-			cout << "CHOPPED OFF END: " << elems.at(i)  << "\n";
+			elems.at(i) = elems.at(i).substr(0,elems.at(i).length()-1);
+			//cout << "CHOPPED OFF END: " << elems.at(i)  << "\n";
 		}
 
-		if(elems.at(i)[0] != '"'){
+		if(elems.at(i)[0] != '"' && elems.at(i)[0] != '%'){
 			continue;
+		}
+		if(elems.at(i)[0] == '%'){
+				elems[i] = loopString;
 		}
 		for(int k = 0; k < elems.at(i).size(); k++){
 			if(elems.at(i).at(k) == '~'){
 				elems.at(i)[k] = ' ';
 			}
+		
 		}
 	}
 	
 
 	return elems;
 }
+vector<string> handleFOR(string line, char delim){
+	int secondSpace = nthSubstr(2,line," ");
+	//cout << "SECOND SPACE INDEX: " << secondSpace << "\n";
+	line = line.substr(secondSpace, line.length());
+	line = line.substr(0, line.length()-8);
+	vector<string> statements = split(line, ';',true);
+	return statements;
+}
+
 
 
 void initializeReservedStrings( map<string,bool> *reservedStrings){
@@ -117,7 +164,7 @@ void initializeReservedStrings( map<string,bool> *reservedStrings){
 }
 
 vector<string> tokenize(string line){
-	vector<string> lineList = split(line, ' '); 	
+	vector<string> lineList = split(line, ' ',false); 	
 	return lineList;
 }
 //check if string is in vars map
@@ -136,14 +183,18 @@ bool isReservedString(string reservedString, map<string,bool> *reservedStrings){
 	return false;
 
 }
-void executeStatement(vector<string> tokens){
+void executeStatement(string statement){
+	vector<string> tokens = tokenize(statement);
+	//cout << "tokens: ";
+	//printVector(tokens);
+	//cout << "\n";
 	if(isReservedString(tokens[0], &reservedStrings)){
 				// do reserved strings stuff
 				if(tokens.at(0) == "PRINT"){
-					cout << "printing : ";
+					//cout << "printing : ";
 					anyType var = vars[tokens.at(1)];
 					var.printVal();
-					cout << "\n";
+					//cout << "\n";
 				}
 				else if(tokens.at(0) == "FOR"){
 					int numRepeat;
@@ -151,8 +202,13 @@ void executeStatement(vector<string> tokens){
 					convert >> numRepeat;
 					
 					for(int j=0; j<numRepeat; j++){
-						
+						vector<string> statements = handleFOR(statement, ';');
+						for(int i = 0; i< statements.size(); i++){
+							//cout << "statement:" <<statements.at(i);
+							executeStatement(statements.at(i));
+						}
 					}
+					
 				}
 	}
 
@@ -180,9 +236,9 @@ void executeStatement(vector<string> tokens){
 								num.type = "int";
 								stringstream convert(tokens.at(2));
 								convert >> num.intVal;
-								cout << "adding value: " << num.intVal;
+								//cout << "adding value: " << num.intVal;
 								vars[tokens.at(0)] = num;
-								cout << "\n";
+								//cout << "\n";
 					
 							}
 						
@@ -217,7 +273,7 @@ void executeStatement(vector<string> tokens){
 								var.intVal = var.intVal + vars[tokens.at(2)].intVal;
 								
 							}
-							cout << "after +=: " << var.intVal << "\n";
+							//cout << "after +=: " << var.intVal << "\n";
 							vars[tokens.at(0)] = var;	
 						}
 					}
@@ -235,7 +291,24 @@ void executeStatement(vector<string> tokens){
 								var.intVal = var.intVal * vars[tokens.at(2)].intVal;
 								
 							}
-							cout << "after *=: " << var.intVal << "\n";
+							//cout << "after *=: " << var.intVal << "\n";
+							vars[tokens.at(0)] = var;	
+					}
+					else if (tokens.at(1) == "/="){
+						anyType var = vars[tokens.at(0)];
+					
+							int intVal;
+							if(isdigit(tokens.at(2)[0])){
+								stringstream convert(tokens.at(2));
+								convert >> intVal;
+								var.intVal = var.intVal / intVal;	
+					
+							}else{//its a variable
+							
+								var.intVal = var.intVal / vars[tokens.at(2)].intVal;
+								
+							}
+							//cout << "after /=: " << var.intVal << "\n";
 							vars[tokens.at(0)] = var;	
 					}
 					else if (tokens.at(1) == "-="){
@@ -252,7 +325,7 @@ void executeStatement(vector<string> tokens){
 								var.intVal = var.intVal - vars[tokens.at(2)].intVal;
 								
 							}
-							cout << "after -=: " << var.intVal << "\n";
+							//cout << "after -=: " << var.intVal << "\n";
 							vars[tokens.at(0)] = var;	
 					}
 				}
@@ -270,40 +343,22 @@ void executeStatement(vector<string> tokens){
 						num.type = "int";
 						stringstream convert(tokens.at(2));
 						convert >> num.intVal;
-						cout << "adding value: " << num.intVal << "\n";
+						//cout << "adding value: " << num.intVal << "\n";
 						vars.insert(pair<string,anyType>(tokens.at(0),num ));
 					
 					}
 
 				}
 }
-int nthSubstr(int n, const string& s,
-			 const string& p) {
-			string::size_type i = s.find(p);     // Find the first occurrence
-
-			int j;
-	  	   for (j = 1; j < n && i != string::npos; ++j)
-		        i = s.find(p, i+1); // Find the next occurrence
-
-			    if (j == n)
-				     return(i);
-			    else
-					return(-1);
-}
-											 
-vector<string> handleFOR(string line, char delim){
-	int secondSpace = nthSubstr(2,line," ");
-	cout << "SECOND SPACE INDEX: " << secondSpace << "\n";
-	line = line.substr(secondSpace, line.length()-7);
-	cout << "LINE AFTER: " << line  << "\n";
-	vector<string> statements = split(line, ';');
-	return statements;
-}
-
-int main() {
+										 
+int main(int argc, char* argv[]) {
 	string a = "hello my name is  x = i ;";
 	string line;
-	ifstream programFile ("TesterPrograms/prog3.zpm");
+	//cout << *argv[1];
+	string arg = argv[1];
+	string file = ("TesterPrograms/" + arg);
+	cout << file;
+	ifstream programFile(""+ file);
 	initializeReservedStrings(&reservedStrings);
 
 	if (programFile.is_open()){
@@ -313,29 +368,12 @@ int main() {
 						//cout << lineCount << ": ";
 			//cout << "line: " <<  line << endl;
 			
-
-			vector<string> tokens = tokenize(line); 
-			if(tokens.at(0) == "FOR"){
-				int numRepeat;
-				stringstream convert(tokens.at(1));
-				convert >> numRepeat;
-					
-				for(int j=0; j<numRepeat; j++){
-					vector<string> statements = handleFOR(line, ';');
-					for(int i = 0; i< statements.size(); i++){
-						cout << "statement:" <<statements.at(i);
-						vector<string> tokens = tokenize(statements.at(i));
-						executeStatement(tokens);
-					}
-				}
-			}
-			cout << "tokens: ";
-			printVector(tokens);
+			
 			if(crashBool){
 				return 1;
 			}	
 			else{
-				executeStatement(tokens);
+				executeStatement(line);
 			}
 		}
 
