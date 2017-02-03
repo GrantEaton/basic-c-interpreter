@@ -101,9 +101,11 @@ vector<string> split(string &s, char delim, bool parseFor) {
 		if(forIndex != -1){
 			int endForIndex;
 			for(int j = forIndex; j < s.length()-6; j++){
-				endForIndex = nthSubstr(1,s,"ENDFOR") + 6;
-				if(s.substr(j,j+6) == "ENDFOR"){
+				//endForIndex = nthSubstr(1,s,"ENDFOR") + 6;
+				cout << "STR: "<<s.substr(j,6) << "\n";
+				if(s.substr(j,6) == "ENDFOR"){
 					endForIndex = j+6;	
+					cout << "endfor: " << endForIndex << "\n";
 					//cout << "ENDFOR INDEX:" << endForIndex << "\n";
 				}
 			}
@@ -253,9 +255,20 @@ void executeStatement(string statement){
 							string newStr;
 							//check if value is string or variable
 							if(tokens.at(2)[0] == '"'){
+								if(var.type == "int"){
+									cout << "error: type must be string. at line: " << lineCount << "\n";
+									cout << "skipping line, but continuing program.";
+									return;	
+								}
+
 								newStr = var.strVal + tokens.at(2).substr(1,tokens.at(2).length()-2);
 							}
 							else{//its a variable
+								if (vars[tokens.at(2)].type != var.type){
+									cout << "error: type must be string. at line: " << lineCount << "\n";
+									cout << "skipping line, but continuing program.";
+									return;	
+								}
 								newStr = var.strVal + vars[tokens.at(2)].strVal;
 							}
 							var.strVal = newStr;
@@ -264,12 +277,21 @@ void executeStatement(string statement){
 						else{//it must be an int
 							int intVal;
 							if(isdigit(tokens.at(2)[0])){
+								if(var.type == "string"){
+									cout << "error: type must be int. at line: " << lineCount << "\n";
+									cout << "skipping line, but continuing program.";
+									return;	
+								}
 								stringstream convert(tokens.at(2));
 								convert >> intVal;
 								var.intVal = var.intVal + intVal;	
 					
 							}else{//its a variable
-							
+								if(vars[tokens.at(2)].type != var.type){
+									cout << "error: type must be int. at line: " << lineCount << "\n";
+									cout << "skipping line, but continuing program.";
+									return;	
+								}	
 								var.intVal = var.intVal + vars[tokens.at(2)].intVal;
 								
 							}
@@ -279,7 +301,11 @@ void executeStatement(string statement){
 					}
 					else if (tokens.at(1) == "*="){
 						anyType var = vars[tokens.at(0)];
-					
+						if(var.type != "int"){
+							cout << "error: type must be int. at line: " << lineCount << "\n";
+							cout << "skipping line, but continuing program.";
+							return;
+						}
 							int intVal;
 							if(isdigit(tokens.at(2)[0])){
 								stringstream convert(tokens.at(2));
@@ -296,7 +322,11 @@ void executeStatement(string statement){
 					}
 					else if (tokens.at(1) == "/="){
 						anyType var = vars[tokens.at(0)];
-					
+						if(var.type != "int"){
+							cout << "error: type must be int. at line: " << lineCount << "\n";
+							cout << "skipping line, but continuing program.";
+							return;
+						}
 							int intVal;
 							if(isdigit(tokens.at(2)[0])){
 								stringstream convert(tokens.at(2));
@@ -313,7 +343,11 @@ void executeStatement(string statement){
 					}
 					else if (tokens.at(1) == "-="){
 						anyType var = vars[tokens.at(0)];
-					
+						if(var.type != "int"){
+							cout << "error: type must be int. at line: " << lineCount << "\n";
+							cout << "skipping line, but continuing program.";
+							return;
+						}	
 							int intVal;
 							if(isdigit(tokens.at(2)[0])){
 								stringstream convert(tokens.at(2));
