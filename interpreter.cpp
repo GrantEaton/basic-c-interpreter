@@ -100,13 +100,13 @@ vector<string> split(string &s, char delim, bool parseFor) {
 		int forIndex = (nthSubstr(1,s, "FOR")); 
 		if(forIndex != -1){
 			int endForIndex;
-			for(int j = forIndex; j < s.length()-6; j++){
+			for(int j = forIndex; j < s.length()-5; j++){
 				//endForIndex = nthSubstr(1,s,"ENDFOR") + 6;
-				cout << "STR: "<<s.substr(j,6) << "\n";
+				//cout << "STR: "<<s.substr(j,6) << "\n";
 				if(s.substr(j,6) == "ENDFOR"){
 					endForIndex = j+6;	
-					cout << "endfor: " << endForIndex << "\n";
-					//cout << "ENDFOR INDEX:" << endForIndex << "\n";
+				//	cout << "endfor: " << endForIndex << "\n";
+				//	cout << "ENDFOR INDEX:" << endForIndex << "\n";
 				}
 			}
 
@@ -391,7 +391,7 @@ int main(int argc, char* argv[]) {
 	//cout << *argv[1];
 	string arg = argv[1];
 	string file = ("TesterPrograms/" + arg);
-	ifstream programFile(file.c_str());
+	ifstream programFile(file.c_str());//"TesterPrograms/prog7.zpm");
 	initializeReservedStrings(&reservedStrings);
 
 	if (programFile.is_open()){

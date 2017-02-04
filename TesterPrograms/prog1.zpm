@@ -1,5 +1,5 @@
 a = 3 ;
-a *= 30 ;
+FOR 5 a += 1 ; FOR 10 a += 1 ; ENDFOR ENDFOR
 b = 0 ;
 b += a ;
 b += b ;
